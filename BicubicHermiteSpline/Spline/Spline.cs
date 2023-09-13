@@ -30,7 +30,8 @@ public class HermiteBicubicSpline : Spline
         int elem = Mesh.FindElementByPoint(point.X, point.Y);
         
         if (elem == -1) throw new Exception($"Cannot find element");
-    
+
+        var functions = HermiteBasis2D.GetBasisForElement(Mesh, elem);
         var nodes = Mesh.Elements[elem].Nodes;
         var p1 = Mesh.Points[nodes.First()];
         var p2 = Mesh.Points[nodes.Last()];
@@ -43,7 +44,7 @@ public class HermiteBicubicSpline : Spline
         double sum = 0.0;
         for (int i = 0; i < HermiteBasis2D.BasisSize; i++)
         {
-            sum += Values[nodes[i]] * HermiteBasis2D.Phi(i, ksi, eta, hx, hy);
+            sum += Values[functions[i]] * HermiteBasis2D.Phi(i, ksi, eta, hx, hy);
         }
     
         return sum;
@@ -57,6 +58,27 @@ public class HermiteBicubicSpline : Spline
         var sw = new StreamWriter($"{folderName}/{filename}");
         
         foreach (var p in Mesh.Points)
+        {
+            double x = p.X;
+            double y = p.Y;
+            double v = ValueAtPoint(p);
+    
+            sw.WriteLine($"{x} {y} {v}");
+        }
+    
+        sw.Close();
+    }
+    
+    public void SaveInPoints(IEnumerable<Point2D> pointsCollection, string folderName = ".", string filename = "spline")
+    {
+        var points = pointsCollection.ToArray();
+        
+        if (!Directory.Exists(folderName))
+            throw new Exception($"Folder {folderName} does not exists");
+    
+        var sw = new StreamWriter($"{folderName}/{filename}");
+        
+        foreach (var p in points)
         {
             double x = p.X;
             double y = p.Y;

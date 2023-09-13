@@ -1,4 +1,5 @@
-﻿using BicubicHermiteSpline.Mesh;
+﻿using System.Globalization;
+using BicubicHermiteSpline.Mesh;
 using BicubicHermiteSpline.Spline;
 
 namespace BicubicHermiteSpline;
@@ -7,12 +8,12 @@ public static class Utilities
 {
     public static Mesh.Mesh ReadMesh(string pointsFile, string elementsFile)
     {
-        var separators = new char[] { ',', '.' };
+        var separators = new[] { ',', '\t', '\n', };
         var points = new List<Point2D>();
         var elements = new List<Element>();
         var lines = File.ReadAllLines(pointsFile);
         
-        for (var i = 0; i < lines.Length; i++)
+        for (var i = 1; i < lines.Length; i++)
         {
             if (lines[i].Contains(','))
                 lines[i] = lines[i].Replace(',', '.');
@@ -21,18 +22,20 @@ public static class Utilities
             
             points.Add(new Point2D
             {
-                X = double.Parse(words[0]),
-                Y = double.Parse(words[1])
+                X = double.Parse(words[0], CultureInfo.InvariantCulture),
+                Y = double.Parse(words[1], CultureInfo.InvariantCulture)
             });
         }
 
         lines = File.ReadAllLines(elementsFile);
 
-        foreach (var line in lines)
+        for (var i = 1; i < lines.Length; )
         {
+            var line = lines[i];
             var words = line.Split(separators);
-            var nodes = words.Select(int.Parse).ToArray();
+            var nodes = words.Where(node => node != "").Select(int.Parse).ToArray();
             elements.Add(new Element(nodes));
+            i += 3;
         }
 
         return new Mesh.Mesh(elements, points);
@@ -40,7 +43,7 @@ public static class Utilities
 
     public static void ReadPointsAndValues(string dataFile, out Point2D[] points, out double[] values)
     {
-        var separators = new char[] { ',', '.' };
+        var separators = new[] { ',', '.' };
         var pointsList = new List<Point2D>();
         var valuesList = new List<double>();
         var lines = File.ReadAllLines(dataFile);
@@ -84,5 +87,26 @@ public static class Utilities
         maxY += alpha * dy;
 
         return (new Point2D(minX, minY), new Point2D(maxX, maxY));
+    }
+
+    public static void ReadData(string filename, out List<Point2D> points, out List<double> values)
+    {
+        var separators = new[] { ',', '\t', '\n', ' ' };
+        points = new List<Point2D>();
+        values = new List<double>();
+
+        var lines = File.ReadAllLines(filename);
+
+        foreach (var line in lines)
+        {
+            var lLine = line.Replace(',', '.');
+            var words = lLine.Split(separators).Select(val => double.Parse(val, CultureInfo.InvariantCulture)).ToArray();
+            points.Add(new Point2D
+            {
+                X = words[0],
+                Y = words[1],
+            });
+            values.Add(words[2]);
+        }
     }
 }

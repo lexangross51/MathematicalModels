@@ -4,23 +4,46 @@ namespace BicubicHermiteSpline.Spline;
 
 public class SplineBuilder
 {
+    private readonly List<PracticeData>[] _dataInside;
     private readonly Mesh.Mesh _mesh;
-    private readonly PracticeData[] _data;
     private readonly SparseMatrix _matrix;
     private readonly double[] _vector;
     private double[] _solution;
-    private readonly double _weight = 1000.0;
+    private double _weight = 1.0;
+    private double _alpha = 1E-06;
+    private readonly int[][] _basisInfo;
 
     public SplineBuilder(Mesh.Mesh mesh, IEnumerable<PracticeData> data)
-    {
-        _data = data.ToArray();
+    { 
         _mesh = mesh;
-
-        PortraitBuilder.PortraitByNodes(_mesh.Elements, _mesh.Points, out var ig, out var jg);
+        _basisInfo = HermiteBasis2D.MakeBasis(mesh);
+        
+        PortraitBuilder.PortraitByNodes(_basisInfo, out var ig, out var jg);
         
         _matrix = new SparseMatrix(ig, jg);
-        _vector = new double[_mesh.Points.Length];
-        _solution = new double[_mesh.Points.Length];
+        _vector = new double[ig.Length - 1];
+        _solution = new double[ig.Length - 1];
+        _dataInside = new List<PracticeData>[_mesh.Elements.Length].Select(_ => new List<PracticeData>()).ToArray();
+        
+        DistributeData(data);
+    }
+
+    private void DistributeData(IEnumerable<PracticeData> dataCollection)
+    {
+        var data = dataCollection.ToArray();
+        var usedPoints = new bool[data.Length];
+
+        for (var i = 0; i < data.Length; i++)
+        {
+            if (usedPoints[i]) continue;
+            
+            var d = data[i];
+            var ielem = _mesh.FindElementByPoint(d.X, d.Y);
+            if (ielem == -1) continue;
+
+            _dataInside[ielem].Add(d);
+            usedPoints[i] = true;
+        }
     }
     
     public HermiteBicubicSpline Build()
@@ -32,20 +55,17 @@ public class SplineBuilder
         {
             var element = _mesh.Elements[ielem];
             var nodes = element.Nodes;
-            var p1 = _mesh.Points[nodes.First()];
-            var p2 = _mesh.Points[nodes.Last()];
+            var p1 = _mesh.Points[nodes[0]];
+            var p2 = _mesh.Points[nodes[^1]];
             var hx = p2.X - p1.X;
             var hy = p2.Y - p1.Y;
+            var functions = _basisInfo[ielem];
 
             Array.Fill(localVector, 0.0);
             localMatrix.Fill(0.0);
 
-            foreach (var d in _data)
+            foreach (var d in _dataInside[ielem])
             {
-                var jelem = _mesh.FindElementByPoint(d.X, d.Y);
-                if (jelem == -1) continue;
-                if (jelem != ielem) continue;
-
                 double ksi = (d.X - p1.X) / hx;
                 double eta = (d.Y - p1.Y) / hy;
 
@@ -68,14 +88,14 @@ public class SplineBuilder
             {
                 for (int j = 0; j < HermiteBasis2D.BasisSize; j++)
                 {
-                    _matrix.Add(nodes[i], nodes[j], localMatrix[i, j] + 1E-07 * stiffnessMatrix[i, j]);
+                    _matrix.Add(functions[i], functions[j], localMatrix[i, j] + _alpha * stiffnessMatrix[i, j]);
                 }
 
-                _vector[nodes[i]] += localVector[i];
+                _vector[functions[i]] += localVector[i];
             }
         }
-
-        var solver = new LOS(100, 1E-20);
+        
+        var solver = new CGMCholesky(7000, 1E-15);
         solver.SetSystem(_matrix, _vector);
         solver.Compute();
         _solution = solver.Solution!;

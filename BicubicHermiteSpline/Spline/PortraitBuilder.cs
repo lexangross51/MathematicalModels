@@ -4,31 +4,22 @@ namespace BicubicHermiteSpline.Spline;
 
 public static class PortraitBuilder
 {
-    public static void PortraitByNodes(IEnumerable<Element> elementsCollection, IEnumerable<Point2D> pointsCollection, 
-        out int[] ig, out int[] jg)
+    public static void PortraitByNodes(int[][] basisInfo, out int[] ig, out int[] jg)
     {
-        var points = pointsCollection.ToArray();
-        var elements = elementsCollection.ToArray();
-        
+        var funcCount = basisInfo[^1][^1] + 1;
         var connectivityList = new List<SortedSet<int>>();
 
-        for (int i = 0; i < points.Length; i++)
+        for (int i = 0; i < funcCount; i++)
         {
             connectivityList.Add(new SortedSet<int>());
         }
 
-        int localSize = elements[0].Nodes.Length;
-
-        foreach (var element in elements)
+        foreach (var nodes in basisInfo)
         {
-            for (int i = 0; i < localSize; i++)
+            foreach (var nodeToInsert in nodes)
             {
-                int nodeToInsert = element.Nodes[i];
-
-                for (int j = 0; j < localSize; j++)
+                foreach (var posToInsert in nodes)
                 {
-                    int posToInsert = element.Nodes[j];
-
                     if (nodeToInsert < posToInsert)
                     {
                         connectivityList[posToInsert].Add(nodeToInsert);

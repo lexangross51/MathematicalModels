@@ -2,56 +2,66 @@
 using BicubicHermiteSpline.Mesh;
 using BicubicHermiteSpline.Spline;
 
-double Function(double x, double y) => x * x * x + y * y * y;
-
-var xArray = new[] { 0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0 };
-
-var points = new Point2D[16];
-int index = 0;
-foreach (var x1 in xArray)
-{
-    foreach (var x2 in xArray)
-    {
-        points[index++] = new Point2D(x2, x1);
-    }
-}
-
-var practiceData = points.Select(p => new PracticeData { X = p.X, Y = p.Y, Value = Function(p.X, p.Y) }).ToList();
-
-// var random = new Random();
+// double Function(double x, double y) => x*x*x + y*y*y;
 //
-// for (int i = 0; i < 16; i++)
+// double s = -200;
+// double e = 200;
+// double n = 4;
+// var v = new List<double>();
+// double h = (e - s) / n;
+// for (int i = 0; i < n + 1; i++) v.Add(s + i * h);
+//
+// var points = new List<Point2D>();
+// foreach (var t in v)
+//     foreach (var t1 in v)
+//         points.Add(new Point2D(t1, t));
+//
+// var sw = new StreamWriter("exact");
+// foreach (var p in points)
 // {
-//     double x = random.NextDouble() * 20.0 - 10.0;
-//     double y = random.NextDouble() * 20.0 - 10.0;
-//     double v = Function(x, y);
-//     
+//     sw.WriteLine($"Function({p.X}, {p.Y}) = {Function(p.X, p.Y)}");
+// }
+// sw.Close();
+//
+// var practiceData = new List<PracticeData>();
+// for (int i = 0; i < points.Count; i++)
+// {
 //     practiceData.Add(new PracticeData
 //     {
-//         X = x,
-//         Y = y,
-//         Value = v
+//         X = points[i].X,
+//         Y = points[i].Y,
+//         Value = Function(points[i].X, points[i].Y)
 //     });
 // }
+
+
+
+
+Utilities.ReadData("HTop.dat", out var points, out var values);
+var practiceData = new List<PracticeData>();
+var fp = points.First();
+for (int i = 0; i < points.Count; i++)
+{
+    practiceData.Add(new PracticeData
+    {
+        X = points[i].X - fp.X,
+        Y = points[i].Y - fp.Y,
+        Value = values[i]
+    });
+}
 
 var area = Utilities.MakeAreaForData(practiceData, 0);
 var meshParameters = new MeshParameters
 {
     LeftBottom = area.LeftBottom,
     RightTop = area.RightTop,
-    XSplits = 100,
-    YSplits = 100
+    XSplits = 50,
+    YSplits = 50
 };
+
 var meshBuilder = new MeshBuilder(meshParameters);
 var mesh = meshBuilder.Build();
-var newMesh = MeshTransformer.AddPointsForBicubicBasis(mesh);
-var splineBuilder = new SplineBuilder(newMesh, practiceData);
+var splineBuilder = new SplineBuilder(mesh, practiceData);
 var spline = splineBuilder.Build();
-
-foreach (var p in newMesh.Points)
-{
-    Console.WriteLine($"Spline({p.X}, {p.Y}) = {Function(p.X, p.Y)}");
-}
-
-
 spline.Save(@"C:\Users\lexan\source\repos\SharpPlot\SharpPlot\bin\Release\net7.0-windows");
+// spline.SaveInPoints(points);

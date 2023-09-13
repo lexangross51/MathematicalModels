@@ -51,7 +51,7 @@ public class Vector : IEnumerable<double>
             result += _storage[i] * _storage[i];
         }
 
-        return System.Math.Sqrt(Convert.ToDouble(result));
+        return Math.Sqrt(Convert.ToDouble(result));
     }
 
     public double SqrNorm()
@@ -65,7 +65,7 @@ public class Vector : IEnumerable<double>
 
         return result;
     }
-
+    
     public IEnumerator<double> GetEnumerator()
         => ((IEnumerable<double>)_storage).GetEnumerator();
 

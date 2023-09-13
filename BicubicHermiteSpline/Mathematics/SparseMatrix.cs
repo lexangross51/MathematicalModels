@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace BicubicHermiteSpline.Mathematics;
+﻿namespace BicubicHermiteSpline.Mathematics;
 
 public class SparseMatrix
 {
@@ -58,6 +56,33 @@ public class SparseMatrix
                 product[i] += ggl[j] * vector[jg[j]];
                 product[jg[j]] += ggu[j] * vector[i];
             }
+        }
+    }
+    
+    public void PrintDense(string path)
+    {
+        double[,] a = new double[Size, Size];
+
+        for (int i = 0; i < Size; i++)
+        {
+            a[i, i] = Di[i];
+
+            for (int j = Ig[i]; j < Ig[i + 1]; j++)
+            {
+                a[i, Jg[j]] = Gg[j];
+                a[Jg[j], i] = Gg[j];
+            }
+        }
+
+        using var sw = new StreamWriter(path);
+        for (int i = 0; i < Size; i++)
+        {
+            for (int j = 0; j < Size; j++)
+            {
+                sw.Write(a[i, j].ToString("0.0000000") + "\t");
+            }
+
+            sw.WriteLine();
         }
     }
 }
