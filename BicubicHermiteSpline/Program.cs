@@ -34,9 +34,6 @@ using BicubicHermiteSpline.Spline;
 //     });
 // }
 
-
-
-
 Utilities.ReadData("HTop.dat", out var points, out var values);
 var practiceData = new List<PracticeData>();
 var fp = points.First();
@@ -55,8 +52,9 @@ var meshParameters = new MeshParameters
 {
     LeftBottom = area.LeftBottom,
     RightTop = area.RightTop,
-    XSplits = 50,
-    YSplits = 50
+    XSplits = 5,
+    YSplits = 5,
+    Refinement = 2
 };
 
 var meshBuilder = new MeshBuilder(meshParameters);

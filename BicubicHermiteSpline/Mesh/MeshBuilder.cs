@@ -2,13 +2,23 @@
 
 public class MeshBuilder
 {
-    private readonly MeshParameters _parameters;
+    private MeshParameters _parameters;
 
     public MeshBuilder(MeshParameters parameters)
     {
         _parameters = parameters;
+
+        PrepareRefinement();
     }
 
+    private void PrepareRefinement()
+    {
+        if (_parameters.Refinement == 0) return;
+
+        _parameters.XSplits *= (int)Math.Pow(2, _parameters.Refinement);
+        _parameters.YSplits *= (int)Math.Pow(2, _parameters.Refinement);
+    }
+    
     public Mesh Build()
     {
         double x0 = _parameters.LeftBottom.X;

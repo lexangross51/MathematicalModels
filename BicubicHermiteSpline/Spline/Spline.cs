@@ -14,7 +14,7 @@ public abstract class Spline
         Values = values;
     }
 
-    public abstract double ValueAtPoint(Point2D point);
+    public abstract double ValueAtPoint(double x, double y);
 
     public abstract void Save(string folderName = ".", string filename = "spline");
 }
@@ -25,11 +25,11 @@ public class HermiteBicubicSpline : Spline
     {
     }
 
-    public override double ValueAtPoint(Point2D point)
+    public override double ValueAtPoint(double x, double y)
     {
-        int elem = Mesh.FindElementByPoint(point.X, point.Y);
-        
-        if (elem == -1) throw new Exception($"Cannot find element");
+        int elem = Mesh.FindElementByPoint(x, y);
+
+        if (elem == -1) return double.MinValue;
 
         var functions = HermiteBasis2D.GetBasisForElement(Mesh, elem);
         var nodes = Mesh.Elements[elem].Nodes;
@@ -38,8 +38,8 @@ public class HermiteBicubicSpline : Spline
         double hx = p2.X - p1.X;
         double hy = p2.Y - p1.Y;
 
-        var ksi = (point.X - p1.X) / hx;
-        var eta = (point.Y - p1.Y) / hy;
+        var ksi = (x - p1.X) / hx;
+        var eta = (y - p1.Y) / hy;
         
         double sum = 0.0;
         for (int i = 0; i < HermiteBasis2D.BasisSize; i++)
@@ -54,37 +54,32 @@ public class HermiteBicubicSpline : Spline
     {
         if (!Directory.Exists(folderName))
             throw new Exception($"Folder {folderName} does not exists");
+
+        double minX = Mesh.Points.Min(p => p.X);
+        double maxX = Mesh.Points.Max(p => p.X);
+        double minY = Mesh.Points.Min(p => p.Y);
+        double maxY = Mesh.Points.Max(p => p.Y);
+
+        int nx = Mesh.AbscissaPointsCount * 4;
+        int ny = Mesh.OrdinatePointsCount * 4;
+
+        double hx = (maxX - minX) / (nx - 1);
+        double hy = (maxY - minY) / (ny - 1);
     
         var sw = new StreamWriter($"{folderName}/{filename}");
-        
-        foreach (var p in Mesh.Points)
+
+        for (int i = 0; i < ny; i++)
         {
-            double x = p.X;
-            double y = p.Y;
-            double v = ValueAtPoint(p);
-    
-            sw.WriteLine($"{x} {y} {v}");
-        }
-    
-        sw.Close();
-    }
-    
-    public void SaveInPoints(IEnumerable<Point2D> pointsCollection, string folderName = ".", string filename = "spline")
-    {
-        var points = pointsCollection.ToArray();
-        
-        if (!Directory.Exists(folderName))
-            throw new Exception($"Folder {folderName} does not exists");
-    
-        var sw = new StreamWriter($"{folderName}/{filename}");
-        
-        foreach (var p in points)
-        {
-            double x = p.X;
-            double y = p.Y;
-            double v = ValueAtPoint(p);
-    
-            sw.WriteLine($"{x} {y} {v}");
+            for (int j = 0; j < nx; j++)
+            {
+                double x = minX + j * hx;
+                double y = minY + i * hy;
+                double v = ValueAtPoint(x, y);
+                
+                if (Math.Abs(v - double.MinValue) < 1E-14) continue;
+                
+                sw.WriteLine($"{x} {y} {v}");
+            }
         }
     
         sw.Close();
