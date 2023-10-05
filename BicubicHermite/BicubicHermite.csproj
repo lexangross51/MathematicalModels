@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net7.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+        <UseWindowsForms>True</UseWindowsForms>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="OpenTK.GLWpfControl" Version="4.2.3" />
+      <PackageReference Include="ReactiveUI.Fody" Version="19.4.1" />
+      <PackageReference Include="ReactiveUI.WPF" Version="19.4.1" />
+      <PackageReference Include="Speckle.Triangle" Version="1.0.0" />
+      <PackageReference Include="StbImageSharp" Version="2.27.13" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Core\Graphics\Shaders\FieldShader.frag">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Core\Graphics\Shaders\FieldShader.vert">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Core\Graphics\Shaders\LineShader.frag">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Core\Graphics\Shaders\LineShader.vert">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Core\Graphics\Shaders\TextShader.frag">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Core\Graphics\Shaders\TextShader.vert">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resourses\build.png" />
+      <Resource Include="Resourses\build.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Resourses\delete.png" />
+      <Resource Include="Resourses\delete.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Resourses\buildMesh.png" />
+      <Resource Include="Resourses\buildMesh.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+    
+</Project>

@@ -1,13 +1,16 @@
-﻿using BicubicHermiteSpline.Mathematics;
+﻿using System;
+using System.IO;
+using System.Linq;
+using BicubicHermite.Core.SplineCalculator.Mathematics;
 
-namespace BicubicHermiteSpline.Spline;
+namespace BicubicHermite.Core.SplineCalculator.Spline;
 
 public abstract class Spline
 {
-    protected readonly Mesh.Mesh Mesh;
+    protected readonly Graphics.Objects.Mesh.Mesh Mesh;
     protected readonly double[] Values;
 
-    protected Spline(Mesh.Mesh mesh, double[] values)
+    protected Spline(Graphics.Objects.Mesh.Mesh mesh, double[] values)
     {
         Mesh = mesh;
         Values = values;
@@ -20,7 +23,7 @@ public abstract class Spline
 
 public class HermiteBicubicSpline : Spline
 {
-    public HermiteBicubicSpline(Mesh.Mesh mesh, double[] values) : base(mesh, values)
+    public HermiteBicubicSpline(Graphics.Objects.Mesh.Mesh mesh, double[] values) : base(mesh, values)
     {
     }
 
@@ -32,8 +35,8 @@ public class HermiteBicubicSpline : Spline
 
         var functions = HermiteBasis2D.GetBasisForElement(Mesh, elem);
         var nodes = Mesh.Elements[elem].Nodes;
-        var p1 = Mesh.Points[nodes.First()];
-        var p2 = Mesh.Points[nodes.Last()];
+        var p1 = Mesh.Points[nodes[0]];
+        var p2 = Mesh.Points[nodes[^1]];
         double hx = p2.X - p1.X;
         double hy = p2.Y - p1.Y;
 
