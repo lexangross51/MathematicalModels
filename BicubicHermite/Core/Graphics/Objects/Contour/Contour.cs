@@ -4,27 +4,42 @@ using BicubicHermite.Core.Graphics.Objects.Mesh;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using TriangleNet;
-using TriangleNet.Geometry;
 using TriangleNet.Meshing;
 
 namespace BicubicHermite.Core.Graphics.Objects.Contour;
 
 public class Contour : IBaseObject
 {
-    private readonly TriangleNet.Meshing.Algorithm.Dwyer _triangulation = new();
+    private readonly TriangleNet.Meshing.Algorithm.SweepLine _triangulation = new();
     public PrimitiveType ObjectType { get; }
     public int PointSize { get; }
     public Point[] Points { get; }
     public Color4[] Colors { get; }
     public uint[]? Indices { get; }
+    public Mesh.Mesh Mesh { get; } 
 
     public Contour(IEnumerable<Point> pointsCollection, IEnumerable<double> values, int levels = 5)
     {
         ObjectType = PrimitiveType.Lines;
         PointSize = 1;
         
-        var mesh = _triangulation.Triangulate(ToTriangleNetVertices(pointsCollection), new Configuration());
-        var isolineBuilder = new IsolineBuilder(ToSharpPlotMesh(mesh), values.ToArray());
+        var mesh = _triangulation.Triangulate(MathHelper.ToTriangleNetVertices(pointsCollection), new Configuration());
+        Mesh = ToSharpPlotMesh(mesh);
+        var isolineBuilder = new IsolineBuilder(Mesh, values.ToArray());
+        isolineBuilder.BuildIsolines(levels);
+
+        Points = isolineBuilder.Points.ToArray();
+        Colors = new[] { Color4.Black };
+        Indices = null;
+    }
+    
+    public Contour(IMesh mesh, IEnumerable<double> values, int levels = 5)
+    {
+        ObjectType = PrimitiveType.Lines;
+        PointSize = 1;
+        
+        Mesh = ToSharpPlotMesh(mesh);
+        var isolineBuilder = new IsolineBuilder(Mesh, values.ToArray());
         isolineBuilder.BuildIsolines(levels);
 
         Points = isolineBuilder.Points.ToArray();
@@ -41,20 +56,6 @@ public class Contour : IBaseObject
 
         leftBottom = new Point(minX, minY);
         rightTop = new Point(maxX, maxY);
-    }
-
-    private IList<Vertex> ToTriangleNetVertices(IEnumerable<Point> pointsCollection)
-    {
-        var pointsArray = pointsCollection.ToArray();
-        var points = new Vertex[pointsArray.Length];
-        int index = 0;
-
-        foreach (var point in pointsArray)
-        {
-            points[index++] = new Vertex(point.X, point.Y);
-        }
-
-        return points;
     }
 
     private Mesh.Mesh ToSharpPlotMesh(IMesh mesh)

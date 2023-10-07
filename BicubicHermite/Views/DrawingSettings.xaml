@@ -1,0 +1,39 @@
+﻿<Window x:Class="BicubicHermite.Views.DrawingSettings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:BicubicHermite.ViewModels"
+        mc:Ignorable="d"
+        Title="DrawingSettings"
+        MinHeight="185" MinWidth="250"
+        MaxHeight="185" MaxWidth="250">
+    <!-- <Window.DataContext> -->
+    <!--     <vm:MainViewModel/> -->
+    <!-- </Window.DataContext> -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <GroupBox Grid.Row="0" Header="Isolines settings" Padding="5">
+            <StackPanel>
+                <CheckBox Content="Draw isolines" FlowDirection="RightToLeft"
+                          HorizontalAlignment="Left" IsChecked="{Binding DrawIsolines, Mode=TwoWay}"/>
+                
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Isolines count:" Padding="0, 5, 5, 5"/>
+                    <TextBox Text="{Binding IsolinesCount, Mode=TwoWay}" Width="30" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        
+        <GroupBox Grid.Row="1" Header="Palette settings" Padding="5" Margin="0, 10, 0, 0">
+            <StackPanel>
+                <CheckBox Content="Draw colorbar" FlowDirection="RightToLeft"
+                          HorizontalAlignment="Left" IsChecked="{Binding DrawColorbar, Mode=TwoWay}"/>
+            </StackPanel>
+        </GroupBox>
+    </Grid>
+</Window>

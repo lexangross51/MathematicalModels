@@ -141,9 +141,6 @@ public class BaseGraphic2D : IRenderContext
         
         // Update projection
         obj.BoundingBox(out var lb, out var rt);
-        
-        // var dx = (rt.X - lb.X) * 0.1;
-        // var dy = (rt.Y - lb.Y) * 0.1;
 
         _camera.GetProjection().SetProjection(new[] { lb.X, rt.X, lb.Y, rt.Y, -1.0, 1.0 });
     }
@@ -206,8 +203,9 @@ public class BaseGraphic2D : IRenderContext
         
         GL.PointSize(1);
     }
-    
-    public void Clear()
+
+    public void DeleteObject(IBaseObject obj)
     {
+        _context.Remove(obj);
     }
 }

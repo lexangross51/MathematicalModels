@@ -26,9 +26,22 @@ public class Mesh : IBaseObject
         PointSize = 1;
 
         uint index = 0;
-        foreach (var node in Elements.SelectMany(element => element.Nodes))
+        if (Elements.First().Nodes.Length == 4)
         {
-            Indices[index++] = (uint)node;
+            foreach (var element in Elements)
+            {
+                Indices[index++] = (uint)element.Nodes[0];
+                Indices[index++] = (uint)element.Nodes[1];
+                Indices[index++] = (uint)element.Nodes[3];
+                Indices[index++] = (uint)element.Nodes[2];
+            }   
+        }
+        else
+        {
+            foreach (var node in Elements.SelectMany(element => element.Nodes))
+            {
+                Indices[index++] = (uint)node;
+            }   
         }
         
         AbscissaPointsCount = Points.DistinctBy(p => p.X).Count();

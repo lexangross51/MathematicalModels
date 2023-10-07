@@ -8,14 +8,14 @@ namespace BicubicHermite.Core.SplineCalculator.Spline;
 
 public class SplineBuilder
 {
-    private readonly List<PracticeData>[] _dataInside;
-    private readonly Graphics.Objects.Mesh.Mesh _mesh;
-    private readonly SparseMatrix _matrix;
-    private readonly double[] _vector;
-    private double[] _solution;
+    private List<PracticeData>[] _dataInside = null!;
+    private Graphics.Objects.Mesh.Mesh _mesh = null!;
+    private SparseMatrix _matrix = null!;
+    private double[] _vector = null!;
+    private double[] _solution = null!;
     private double _weight = 1.0;
     private double _alpha = 1E-06;
-    private readonly int[][] _basisInfo;
+    private int[][] _basisInfo = null!;
 
     public double OmegaWeight
     {
@@ -29,8 +29,8 @@ public class SplineBuilder
         set => _alpha = value;
     }
 
-    public SplineBuilder(Graphics.Objects.Mesh.Mesh mesh, IEnumerable<PracticeData> data)
-    { 
+    public void SetData(Graphics.Objects.Mesh.Mesh mesh, IEnumerable<PracticeData> data)
+    {
         _mesh = mesh;
         _basisInfo = HermiteBasis2D.MakeBasis(mesh);
         
@@ -41,7 +41,7 @@ public class SplineBuilder
         _solution = new double[ig.Length - 1];
         _dataInside = new List<PracticeData>[_mesh.Elements.Length].Select(_ => new List<PracticeData>()).ToArray();
         
-        DistributeData(data);
+        DistributeData(data);        
     }
 
     private void DistributeData(IEnumerable<PracticeData> dataCollection)

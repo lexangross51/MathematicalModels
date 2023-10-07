@@ -3,20 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:BicubicHermite.ViewModels"
         xmlns:local="clr-namespace:BicubicHermite.Core.Graphics.Scene"
         mc:Ignorable="d"
         MinWidth="450" MinHeight="250"
-        Title="Bicubic Hermite spline" Height="450" Width="800"
+        Title="Bicubic Hermite spline" Height="600" Width="800"
         SizeChanged="MainWindowOnSizeChanged"
         x:Name="MainForm">
-    
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
     <Window.Resources>
+        <vm:IsEnabledConverter x:Key="IsEnabledConverter" />
+        <vm:IsNotBothNullMultiValueConverter x:Key="IsNotBothNullMultiValueConverter" />
         <!-- Button with rounded borders  -->
         <Style x:Key="RoundedButton" TargetType="Button">
-            <Setter Property="Background" Value="LightSteelBlue"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="Black"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="LightSteelBlue" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -24,139 +29,208 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top" Background="LightGray">
             <MenuItem Header="File">
-                <MenuItem Header="Open model" Command="{Binding OpenModelCommand}"/>
-                <MenuItem Header="Save model" Command="{Binding SaveModelCommand}"/>
-                <MenuItem Header="Load data" Command="{Binding LoadDataCommand}"/>
+                <!-- <MenuItem Header="Open model" Command="{Binding OpenModel}"/> -->
+                <!-- <MenuItem Header="Save model" Command="{Binding SaveModel}"/> -->
+                <MenuItem Header="Load data" Command="{Binding LoadData}" />
             </MenuItem>
-            
+
             <MenuItem Header="Settings">
-                <MenuItem Header="Drawing settings"/>
+                <MenuItem Header="Drawing settings" Command="{Binding DrawingSettingsOpenWindow}" />
             </MenuItem>
         </Menu>
-        
+
         <StatusBar x:Name="StatusBar" DockPanel.Dock="Bottom">
-            <Label Content="X:"/>
-            <Label x:Name="XPositionBox" Content="{Binding ElementName=MainForm, Path=XCursorPosition}" Width="50"/>
-            <Label Content="Y:"/>
-            <Label x:Name="YPositionBox" Content="{Binding ElementName=MainForm, Path=YCursorPosition}" Width="50"/>
+            <Label Content="X:" />
+            <Label x:Name="XPositionBox" Content="{Binding ElementName=MainForm, Path=XCursorPosition}" Width="50" />
+            <Label Content="Y:" />
+            <Label x:Name="YPositionBox" Content="{Binding ElementName=MainForm, Path=YCursorPosition}" Width="50" />
         </StatusBar>
-        
-        <Grid x:Name="MainGrid" DockPanel.Dock="Bottom" Margin="0, 5, 0, 0" 
+
+        <Grid x:Name="MainGrid" DockPanel.Dock="Bottom" Margin="0, 5, 0, 0"
               SizeChanged="MainGridOnSizeChanged">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            
-            <local:GraphicControl x:Name="GraphicControl" Grid.Column="0" Width="300" Height="100"/>
-            
-            <Expander Grid.Column="1" ExpandDirection="Right" IsExpanded="True"
-                      SizeChanged="MainGridOnSizeChanged">
-                <Expander.HeaderTemplate>
-                    <DataTemplate>
-                        <Label Content="Spline settings">
-                            <Label.LayoutTransform>
-                                <TransformGroup>
-                                    <RotateTransform Angle="-90" />
-                                </TransformGroup>
-                            </Label.LayoutTransform>
-                        </Label>
-                    </DataTemplate>
-                </Expander.HeaderTemplate>
-                <StackPanel Margin="0, 0, 5, 0">
-                    <Expander Header="Spline parameters" IsExpanded="True">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Label Content="Alpha:" VerticalAlignment="Center" Width="80"
-                                       ToolTip="Regularisation parameter affecting first derivatives"/>
-                                <TextBox x:Name="AlphaValueBox" Text="" Width="50" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        
-                            <StackPanel Orientation="Horizontal">
-                                <Label Content="Points factor:" VerticalAlignment="Center" Width="80" 
-                                       ToolTip="Increases points count at which to output a spline value"/>
-                                <TextBox x:Name="PointsFactorBox" Text="" Width="50" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            
-                            <Grid Margin="4, 5, 0, 0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Button Grid.Column="0" x:Name="ButtonBuildSpline" Width="35" Height="35"
-                                        Style="{StaticResource RoundedButton}"
-                                        ToolTip="Build spline">
-                                    <Image Source="Resourses/build.png" Width="30"/>
-                                </Button>
-                        
-                                <Button Grid.Column="1" x:Name="ButtonDeleteSpline" Width="35" Height="35"
-                                        Margin="5, 0, 0, 0"
-                                        Style="{StaticResource RoundedButton}"
-                                        ToolTip="Delete spline">
-                                    <Image Source="Resourses/delete.png" Width="30"/>
-                                </Button>
-                            </Grid>
-                        </StackPanel>
-                    </Expander>
-                    
-                    <Expander Header="Mesh parameters" Margin="0, 10, 0, 0" IsExpanded="True">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Label Content="X splits:" VerticalAlignment="Center" Width="80"
-                                       ToolTip="Number of X-axis splits"/>
-                                <TextBox x:Name="XSplitsBox" Text="" Width="50" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        
-                            <StackPanel Orientation="Horizontal">
-                                <Label Content="Y splits:" VerticalAlignment="Center" Width="80" 
-                                       ToolTip="Number of Y-axis splits"/>
-                                <TextBox x:Name="YSplitsBox" Text="" Width="50" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            
-                            <StackPanel Orientation="Horizontal">
-                                <Label Content="Refinement:" VerticalAlignment="Center" Width="80" 
-                                       ToolTip="Number of mesh nests"/>
-                                <TextBox x:Name="RefinementBox" Text="" Width="50" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            
-                            <Grid Margin="4, 5, 0, 0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Button Grid.Column="0" x:Name="ButtonBuildMesh" Width="35" Height="35"
-                                        Style="{StaticResource RoundedButton}"
-                                        ToolTip="Build mesh">
-                                    <Image Source="Resourses/buildMesh.png" Width="30"/>
-                                </Button>
-                        
-                                <Button Grid.Column="1" x:Name="ButtonDeleteMesh" Width="35" Height="35"
-                                        Margin="5, 0, 0, 0"
-                                        Style="{StaticResource RoundedButton}"
-                                        ToolTip="Delete mesh">
-                                    <Image Source="Resourses/delete.png" Width="30"/>
-                                </Button>
-                            </Grid>
-                        </StackPanel>
-                    </Expander>
-                    
 
-                </StackPanel>
-            </Expander>
-            
-            
+            <local:GraphicControl x:Name="GraphicControl" Grid.Column="0" Width="300" Height="100" />
+
+            <StackPanel Grid.Column="1">
+                <Expander ExpandDirection="Right" IsExpanded="True"
+                          SizeChanged="MainGridOnSizeChanged">
+                    <Expander.HeaderTemplate>
+                        <DataTemplate>
+                            <Label Content="Spline settings">
+                                <Label.LayoutTransform>
+                                    <TransformGroup>
+                                        <RotateTransform Angle="-90" />
+                                    </TransformGroup>
+                                </Label.LayoutTransform>
+                            </Label>
+                        </DataTemplate>
+                    </Expander.HeaderTemplate>
+                    <StackPanel Margin="0, 0, 5, 0">
+                        <Expander Header="Spline parameters" IsExpanded="True">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Alpha:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Regularisation parameter affecting first derivatives" />
+                                    <TextBox x:Name="AlphaValueBox" Text="{Binding Alpha, Mode=TwoWay}" Width="50"
+                                             VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Omega:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Regularisation parameter affecting first derivatives" />
+                                    <TextBox x:Name="OmegaWeightValueBox" Text="{Binding Omega, Mode=TwoWay}"
+                                             Width="50" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Points factor:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Increases points count at which to output a spline value" />
+                                    <TextBox x:Name="PointsFactorBox" Text="{Binding PointsFactor, Mode=TwoWay}"
+                                             Width="50" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <Grid Margin="4, 5, 0, 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" x:Name="ButtonBuildSpline" Width="35" Height="35"
+                                            Style="{StaticResource RoundedButton}"
+                                            ToolTip="Build spline"
+                                            Command="{Binding BuildSpline}"
+                                            IsEnabled="{Binding BuildSpline.CanExecute}">
+                                        <Image Source="Resourses/build.png" Width="30" />
+                                    </Button>
+
+                                    <Button Grid.Column="1" x:Name="ButtonDeleteSpline" Width="35" Height="35"
+                                            Margin="5, 0, 0, 0"
+                                            Style="{StaticResource RoundedButton}"
+                                            ToolTip="Delete spline"
+                                            Command="{Binding Path=DeleteSpline}">
+                                        <Image Source="Resourses/delete.png" Width="30" />
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Mesh parameters" Margin="0, 10, 0, 0" IsExpanded="True">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="X splits:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Number of X-axis splits" />
+                                    <TextBox x:Name="XSplitsBox" Text="{Binding XSplits, Mode=TwoWay}"
+                                             Width="50" VerticalAlignment="Center">
+                                        <TextBox.IsEnabled>
+                                            <Binding Path="AreaRectangle"
+                                                     Converter="{StaticResource IsEnabledConverter}" />
+                                        </TextBox.IsEnabled>
+                                    </TextBox>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Y splits:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Number of Y-axis splits" />
+                                    <TextBox x:Name="YSplitsBox" Text="{Binding YSplits, Mode=TwoWay}"
+                                             Width="50" VerticalAlignment="Center">
+                                        <TextBox.IsEnabled>
+                                            <Binding Path="AreaRectangle"
+                                                     Converter="{StaticResource IsEnabledConverter}" />
+                                        </TextBox.IsEnabled>
+                                    </TextBox>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Refinement:" VerticalAlignment="Center" Width="80"
+                                           ToolTip="Number of mesh nests" />
+                                    <TextBox x:Name="RefinementBox" Text="{Binding MeshRefinement, Mode=TwoWay}"
+                                             Width="50" VerticalAlignment="Center">
+                                        <TextBox.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource IsNotBothNullMultiValueConverter}">
+                                                <Binding Path="XSplits" />
+                                                <Binding Path="YSplits" />
+                                            </MultiBinding>
+                                        </TextBox.IsEnabled>
+                                    </TextBox>
+                                </StackPanel>
+
+                                <Grid Margin="4, 5, 0, 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" x:Name="ButtonBuildMesh" Width="35" Height="35"
+                                            ToolTip="Build mesh"
+                                            Style="{StaticResource RoundedButton}"
+                                            Command="{Binding BuildMesh}"
+                                            IsEnabled="{Binding BuildMesh.CanExecute}">
+                                        <Image Source="Resourses/buildMesh.png" Width="30" />
+                                    </Button>
+
+                                    <Button Grid.Column="1" x:Name="ButtonDeleteMesh" Width="35" Height="35"
+                                            Margin="5, 0, 0, 0"
+                                            Style="{StaticResource RoundedButton}"
+                                            ToolTip="Delete mesh"
+                                            Command="{Binding DeleteMesh}">
+                                        <Image Source="Resourses/delete.png" Width="30" />
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </Expander>
+                
+                <Expander ExpandDirection="Right" IsExpanded="True" Margin="0, 10, 0, 0"
+                          SizeChanged="MainGridOnSizeChanged">
+                    <Expander.HeaderTemplate>
+                        <DataTemplate>
+                            <Label Content="Residual control">
+                                <Label.LayoutTransform>
+                                    <TransformGroup>
+                                        <RotateTransform Angle="-90" />
+                                    </TransformGroup>
+                                </Label.LayoutTransform>
+                            </Label>
+                        </DataTemplate>
+                    </Expander.HeaderTemplate>
+                    <StackPanel Margin="0, 0, 5, 0">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Current:"/>
+                            <TextBlock Text="{Binding Residual}" Width="58" TextAlignment="Left" VerticalAlignment="Center"/>
+                            <Button x:Name="AddResidualToList" Style="{StaticResource RoundedButton}"
+                                    Width="20" Height="20"
+                                    ToolTip="Add residual to list"
+                                    Command="{Binding AddResidualToList}">
+                                <Image Source="Resourses/plus.png" Width="15" />
+                            </Button>
+                        </StackPanel>
+                        
+                        <ListBox ItemsSource="{Binding Residuals}"/>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+
+
         </Grid>
     </DockPanel>
 </Window>

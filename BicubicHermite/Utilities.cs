@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using BicubicHermite.Core.Graphics.Objects;
 using BicubicHermite.Core.Graphics.Objects.Mesh;
 using BicubicHermite.Core.Graphics.Palette;
 using OpenTK.Mathematics;
+using TriangleNet.Geometry;
 using Edge = BicubicHermite.Core.Graphics.Objects.Mesh.Edge;
+using Point = BicubicHermite.Core.Graphics.Objects.Point;
 
 namespace BicubicHermite;
 
@@ -68,16 +69,11 @@ public static class ColorInterpolator
 
 public static class MathHelper
 {
-    private static double Epsilon { get; } = 1E-14;
+    private static double Epsilon => 1E-14;
 
     public static double Distance2D(double ax, double ay, double bx, double by)
     {
         return Math.Sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-    }
-    
-    public static double Distance3D(double ax, double ay, double az, double bx, double by, double bz)
-    {
-        return Math.Sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by) + (az - bz) * (az - bz));
     }
 
     public static bool IsIntersected(Point a, Point b, Point c, Point d, out Point? intersection)
@@ -203,6 +199,40 @@ public static class MathHelper
         
         return polygon;
     }
+    
+    public static (Point LeftBottom, Point RightTop) MakeAreaForData(IEnumerable<Point> dataCollection, double shift = 20)
+    {
+        var data = dataCollection.ToArray();
+        var minX = data.MinBy(d => d.X).X;
+        var minY = data.MinBy(d => d.Y).Y;
+        var maxX = data.MaxBy(d => d.X).X;
+        var maxY = data.MaxBy(d => d.Y).Y;
+        var dx = maxX - minX;
+        var dy = maxY - minY;
+        
+        double alpha = shift / 100.0;
+
+        minX -= alpha * dx;
+        maxX += alpha * dx;
+        minY -= alpha * dy;
+        maxY += alpha * dy;
+
+        return (new Point(minX, minY), new Point(maxX, maxY));
+    }
+    
+    public static IList<Vertex> ToTriangleNetVertices(IEnumerable<Point> pointsCollection)
+    {
+        var pointsArray = pointsCollection.ToArray();
+        var points = new Vertex[pointsArray.Length];
+        int index = 0;
+
+        foreach (var point in pointsArray)
+        {
+            points[index++] = new Vertex(point.X, point.Y);
+        }
+
+        return points;
+    }
 }
 
 public class IsolineBuilder
@@ -317,6 +347,15 @@ public static class FilesWorking
                 Y = words[1],
             });
             values.Add(words[2]);
+        }
+
+        var fp = points.First();
+        for (var i = 0; i < points.Count; i++)
+        {
+            var p = points[i];
+            p.X -= fp.X;
+            p.Y -= fp.Y;
+            points[i] = p;
         }
 
         return (points, values);

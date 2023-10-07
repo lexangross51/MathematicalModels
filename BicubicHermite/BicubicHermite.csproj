@@ -50,6 +50,15 @@
       <Resource Include="Resourses\buildMesh.png">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Resource>
+      <None Remove="Resourses\mark.png" />
+      <None Remove="Resourses\plus.png" />
+      <Resource Include="Resourses\plus.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="BicubicHermite.csproj.DotSettings.user" />
     </ItemGroup>
     
 </Project>

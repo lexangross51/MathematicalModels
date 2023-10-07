@@ -1,7 +1,9 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
+using BicubicHermite.Core.Graphics.Objects;
 using BicubicHermite.Core.SplineCalculator.Mathematics;
+using BicubicHermiteSpline.Spline;
 
 namespace BicubicHermite.Core.SplineCalculator.Spline;
 
@@ -18,7 +20,9 @@ public abstract class Spline
 
     public abstract double ValueAtPoint(double x, double y);
 
-    public abstract void Save(string folderName = ".", string filename = "spline");
+    public abstract IEnumerable<double> CalculateAtPoints(IEnumerable<Point> pointsCollection);
+
+    public abstract double CalculateResidual(IEnumerable<PracticeData> dataCollection);
 }
 
 public class HermiteBicubicSpline : Spline
@@ -52,38 +56,27 @@ public class HermiteBicubicSpline : Spline
         return sum;
     }
 
-    public override void Save(string folderName = ".", string filename = "spline")
+    public override IEnumerable<double> CalculateAtPoints(IEnumerable<Point> pointsCollection)
     {
-        if (!Directory.Exists(folderName))
-            throw new Exception($"Folder {folderName} does not exists");
+        var points = pointsCollection as Point[] ?? pointsCollection.ToArray();
+        var values = points.Select(p => ValueAtPoint(p.X, p.Y))
+            .Where(v => Math.Abs(v - double.MinValue) > 1E-14)
+            .ToList();
 
-        double minX = Mesh.Points.Min(p => p.X);
-        double maxX = Mesh.Points.Max(p => p.X);
-        double minY = Mesh.Points.Min(p => p.Y);
-        double maxY = Mesh.Points.Max(p => p.Y);
+        return values;
+    }
 
-        int nx = Mesh.AbscissaPointsCount * 4;
-        int ny = Mesh.OrdinatePointsCount * 4;
-
-        double hx = (maxX - minX) / (nx - 1);
-        double hy = (maxY - minY) / (ny - 1);
-    
-        var sw = new StreamWriter($"{folderName}/{filename}");
-
-        for (int i = 0; i < ny; i++)
+    public override double CalculateResidual(IEnumerable<PracticeData> dataCollection)
+    {
+        double sqrMean = 0.0;
+        var data = dataCollection.ToArray();
+        
+        foreach (var d in data)
         {
-            for (int j = 0; j < nx; j++)
-            {
-                double x = minX + j * hx;
-                double y = minY + i * hy;
-                double v = ValueAtPoint(x, y);
-                
-                if (Math.Abs(v - double.MinValue) < 1E-14) continue;
-                
-                sw.WriteLine($"{x} {y} {v}");
-            }
+            var splineValue = ValueAtPoint(d.X, d.Y);
+            sqrMean += (d.Value - splineValue) * (d.Value - splineValue);
         }
-    
-        sw.Close();
+
+        return Math.Sqrt(sqrMean / data.Length);
     }
 }

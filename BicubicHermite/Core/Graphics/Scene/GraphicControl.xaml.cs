@@ -23,21 +23,21 @@ public partial class GraphicControl
     private readonly IRenderContext _baseGraphic;
     private bool _isMouseDown;
     private double _mouseXPrevious, _mouseYPrevious;
-    
-    [Reactive] public double XCursorPosition { get; set;}
-    [Reactive] public double YCursorPosition { get; set;}
+
+    [Reactive] public double XCursorPosition { get; set; }
+    [Reactive] public double YCursorPosition { get; set; }
 
     public GraphicControl()
     {
         InitializeComponent();
-        
+
         GlControl.Start(new GLWpfControlSettings
         {
             MajorVersion = 2,
             MinorVersion = 1,
             RenderContinuously = false
         });
-        
+
         var font = new SharpPlotFont
         {
             Color = Color.Black,
@@ -57,18 +57,18 @@ public partial class GraphicControl
                 Bottom = indent
             }
         };
-        
+
         var camera = new Camera2D(new OrthographicProjection(new double[] { -1, 1, -1, 1, -1, 1 }, 1));
-        
+
         _viewPortRenderer = new Viewport2DRenderer(renderSettings, camera) { Font = font };
         _baseGraphic = new BaseGraphic2D(renderSettings, camera);
-        
+
         GL.ClearColor(Color.White);
 
         this.WhenAnyValue(t => t.XCursorPosition)
             .Subscribe(_ => Debug.WriteLine("kek"));
     }
-    
+
     private void OnRender(TimeSpan obj)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit);
@@ -76,15 +76,15 @@ public partial class GraphicControl
         _baseGraphic.DrawObjects();
         _viewPortRenderer.RenderAxis();
     }
-    
+
     private void OnMouseWheel(object sender, MouseWheelEventArgs e)
-    {        
+    {
         var pos = e.GetPosition(this);
         var projection = _viewPortRenderer.GetCamera().GetProjection();
         var renderSettings = _viewPortRenderer.GetRenderSettings();
-        
+
         projection.FromWorldToProjection(pos.X, pos.Y, renderSettings, out var x, out var y);
-        
+
         _viewPortRenderer.GetCamera().Zoom(x, y, e.Delta);
         _viewPortRenderer.UpdateView();
         GlControl.InvalidateVisual();
@@ -102,26 +102,28 @@ public partial class GraphicControl
     {
         _isMouseDown = false;
     }
-    
+
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
         var projection = _viewPortRenderer.GetCamera().GetProjection();
         var renderSettings = _viewPortRenderer.GetRenderSettings();
-        
+
         var mousePosition = e.GetPosition(this);
-        projection.FromWorldToProjection(mousePosition.X, mousePosition.Y, renderSettings, out var xCurrent, out var yCurrent);
+        projection.FromWorldToProjection(mousePosition.X, mousePosition.Y, renderSettings, out var xCurrent,
+            out var yCurrent);
 
         XCursorPosition = xCurrent;
         YCursorPosition = yCurrent;
-        
+
         if (!_isMouseDown) return;
 
-        projection.FromWorldToProjection(_mouseXPrevious, _mouseYPrevious, renderSettings, out var xPrevious, out var yPrevious);
-        
+        projection.FromWorldToProjection(_mouseXPrevious, _mouseYPrevious, renderSettings, out var xPrevious,
+            out var yPrevious);
+
         _viewPortRenderer.GetCamera().Move(-xCurrent + xPrevious, -yCurrent + yPrevious);
         _mouseXPrevious = mousePosition.X;
         _mouseYPrevious = mousePosition.Y;
-        
+
         _viewPortRenderer.UpdateView();
         GlControl.InvalidateVisual();
     }
@@ -131,22 +133,28 @@ public partial class GraphicControl
         _viewPortRenderer.DrawingGrid = !_viewPortRenderer.DrawingGrid;
         GlControl.InvalidateVisual();
     }
-    
+
     public void OnChangeSize(ScreenSize newSize)
     {
         _viewPortRenderer.GetNewViewport(newSize);
         _baseGraphic.GetNewViewport(newSize);
         _viewPortRenderer.UpdateView();
-        
+
         Width = newSize.Width;
         Height = newSize.Height;
         GlControl.InvalidateArrange();
     }
-    
+
 
     public void AddObject(IBaseObject obj)
     {
         _baseGraphic.AddObject(obj);
+        GlControl.InvalidateVisual();
+    }
+
+    public void DeleteObject(IBaseObject obj)
+    {
+        _baseGraphic.DeleteObject(obj);
         GlControl.InvalidateVisual();
     }
 }
