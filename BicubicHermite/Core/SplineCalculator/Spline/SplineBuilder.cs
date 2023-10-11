@@ -111,7 +111,8 @@ public class SplineBuilder
             }
         }
         
-        var solver = new CGMCholesky(7000, 1E-15);
+        // var solver = new CGMCholesky(7000, 1E-20);
+        var solver = new LOS(50000, 1E-30);
         solver.SetSystem(_matrix, _vector);
         solver.Compute();
         _solution = solver.Solution!;

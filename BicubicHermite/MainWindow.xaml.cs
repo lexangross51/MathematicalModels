@@ -110,10 +110,19 @@ public partial class MainWindow : IViewFor<MainViewModel>
                     
                         contourMesh = delaunay.Triangulate(MathHelper.ToTriangleNetVertices(points), new Configuration());
                         _contour = new Contour(contourMesh, values, 30);
-                        _colorMap = new ColorMap(_contour.Mesh, values, Palette.Rainbow);
+                        _colorMap = new ColorMap(_contour.Mesh, values, Palette.RainbowReverse);
                     
                         GraphicControl.AddObject(_colorMap);
                         GraphicControl.AddObject(_contour);
+                        
+                        var colorbar = new Colorbar(values, Palette.Rainbow)
+                        {
+                            VerticalAlignment = VerticalAlignment.Bottom,
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            Margin = new Thickness(0, 0, 0, 5)
+                        };
+                        
+                        GraphicControl.MainGrid.Children.Add(colorbar);
                     }
                 })
                 .DisposeWith(disposables);

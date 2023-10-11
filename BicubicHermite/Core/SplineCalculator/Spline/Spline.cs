@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using BicubicHermite.Core.Graphics.Objects;
 using BicubicHermite.Core.SplineCalculator.Mathematics;
+using BicubicHermite.ViewModels;
 using BicubicHermiteSpline.Spline;
+using DynamicData;
 
 namespace BicubicHermite.Core.SplineCalculator.Spline;
 
@@ -22,7 +24,7 @@ public abstract class Spline
 
     public abstract IEnumerable<double> CalculateAtPoints(IEnumerable<Point> pointsCollection);
 
-    public abstract double CalculateResidual(IEnumerable<PracticeData> dataCollection);
+    public abstract (IEnumerable<TableRecord>, double) CalculateResidual(IEnumerable<PracticeData> dataCollection);
 }
 
 public class HermiteBicubicSpline : Spline
@@ -59,24 +61,41 @@ public class HermiteBicubicSpline : Spline
     public override IEnumerable<double> CalculateAtPoints(IEnumerable<Point> pointsCollection)
     {
         var points = pointsCollection as Point[] ?? pointsCollection.ToArray();
-        var values = points.Select(p => ValueAtPoint(p.X, p.Y))
-            .Where(v => Math.Abs(v - double.MinValue) > 1E-14)
-            .ToList();
+        var values = new List<double>();
+
+        foreach (var p in points)
+        {
+            var value = ValueAtPoint(p.X, p.Y);
+            if (value == double.MinValue) continue;
+            
+            values.Add(value);
+        }
 
         return values;
     }
 
-    public override double CalculateResidual(IEnumerable<PracticeData> dataCollection)
+    public override (IEnumerable<TableRecord>, double) CalculateResidual(IEnumerable<PracticeData> dataCollection)
     {
         double sqrMean = 0.0;
+        var errors = new List<TableRecord>();
         var data = dataCollection.ToArray();
         
         foreach (var d in data)
         {
             var splineValue = ValueAtPoint(d.X, d.Y);
-            sqrMean += (d.Value - splineValue) * (d.Value - splineValue);
+            var error = d.Value - splineValue;
+            sqrMean += error * error;
+            
+            errors.Add(new TableRecord
+            {
+                X = d.X,
+                Y = d.Y,
+                Value = d.Value,
+                Spline = splineValue,
+                AbsError = Math.Abs(error)
+            });
         }
 
-        return Math.Sqrt(sqrMean / data.Length);
+        return (errors, Math.Sqrt(sqrMean / data.Length));
     }
 }

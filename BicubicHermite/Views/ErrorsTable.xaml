@@ -1,0 +1,15 @@
+﻿<Window x:Class="BicubicHermite.Views.ErrorsTable"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:BicubicHermite.ViewModels"
+        mc:Ignorable="d"
+        Title="ErrorsTable" Height="450" Width="800">
+    <d:Window.DataContext>
+        <vm:MainViewModel/>
+    </d:Window.DataContext>
+    <DockPanel>
+        <DataGrid x:Name="ErrorsDataGrid" Margin="10" ItemsSource="{Binding Errors}"/>
+    </DockPanel>
+</Window>

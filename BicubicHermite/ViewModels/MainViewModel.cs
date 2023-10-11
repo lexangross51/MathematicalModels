@@ -7,11 +7,11 @@ using System.Reactive.Linq;
 using System.Windows.Forms;
 using BicubicHermite.Core.Graphics.Objects;
 using BicubicHermite.Core.Graphics.Objects.Mesh;
-using BicubicHermite.Core.Graphics.Palette;
 using BicubicHermite.Core.SplineCalculator.Mesh;
 using BicubicHermite.Core.SplineCalculator.Spline;
 using BicubicHermite.Views;
 using BicubicHermiteSpline.Spline;
+using DynamicData;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -22,34 +22,34 @@ public class MainViewModel : ReactiveObject
     private List<PracticeData>? _data;
     private readonly SplineBuilder _splineBuilder = new();
     [Reactive] public HermiteBicubicSpline? Spline { get; private set; }
-    [Reactive] public double? Alpha { get; set; } = 1e-06;
+    [Reactive] public double? Alpha { get; set; } = 0;
     [Reactive] public double? Omega { get; set; } = 1.0;
-    [Reactive] public int? PointsFactor { get; set; } = 4;
+    [Reactive] public int? PointsFactor { get; set; } = 30;
     [Reactive] public double Residual { get; set; }
     
     [Reactive] public Point[]? LoadedPoints { get; set; }
     [Reactive] public double[]? LoadedValues { get; set; }
     [Reactive] public Rectangle? AreaRectangle { get; set; }
 
-    [Reactive] public int? XSplits { get; set; } = 10;
-    [Reactive] public int? YSplits { get; set; } = 10;
+    [Reactive] public int? XSplits { get; set; } = 2;
+    [Reactive] public int? YSplits { get; set; } = 2;
     [Reactive] public int? MeshRefinement { get; set; } = 0;
     [Reactive] public Mesh? RegularMesh { get; set; }
 
     [Reactive] public bool DrawIsolines { get; set; } = true;
     [Reactive] public int IsolinesCount { get; set; } = 30;
-    [Reactive] public bool DrawColorbar { get; set; } = false;
+    [Reactive] public bool DrawColorbar { get; set; } = true;
 
+    public ObservableCollection<TableRecord> Errors { get; } = new();
     public ObservableCollection<double> Residuals { get; } = new();
     public ReactiveCommand<Unit, Unit> LoadData { get; }
-    // public ReactiveCommand<Unit, Unit> OpenModel { get; }
-    // public ReactiveCommand<Unit, Unit> SaveModel { get; }
     public ReactiveCommand<Unit, Unit> BuildMesh { get; }
     public ReactiveCommand<Unit, Unit> BuildSpline { get; }
     public ReactiveCommand<Unit, Unit> DeleteSpline { get; }
     public ReactiveCommand<Unit, Unit> DeleteMesh { get; }
     public ReactiveCommand<Unit, Unit> DrawingSettingsOpenWindow { get; }
     public ReactiveCommand<Unit, Unit> AddResidualToList { get; }
+    public ReactiveCommand<Unit, Unit> OpenTable { get; }
 
     public MainViewModel()
     {
@@ -114,7 +114,10 @@ public class MainViewModel : ReactiveObject
                 _splineBuilder.OmegaWeight = Omega!.Value;
                 Spline = _splineBuilder.Build();
                 DrawIsolines = true;
-                Residual = Spline.CalculateResidual(_data);
+                
+                var pair = Spline.CalculateResidual(_data);
+                Errors.AddRange(pair.Item1);
+                Residual = pair.Item2;
 
             }, canExecute: this.WhenAnyValue(
                     x => x.RegularMesh)
@@ -148,5 +151,13 @@ public class MainViewModel : ReactiveObject
         {
             Residuals.Add(Residual);
         });
+
+        OpenTable = ReactiveCommand.Create(() =>
+        {
+            using var window = new ErrorsTable();
+            window.DataContext = this;
+            window.Show();
+        }, this.WhenAnyValue(x => x.Spline)
+            .Select(spline => spline != null));
     }
 }
