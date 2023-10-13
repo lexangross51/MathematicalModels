@@ -360,4 +360,18 @@ public static class FilesWorking
 
         return (points, values);
     }
+
+    public static void WriteData(string filename, IEnumerable<Point> points, IEnumerable<double> values)
+    {
+        var p = points.ToArray();
+        var v = values.ToArray();
+        
+        var sw = new StreamWriter(filename);
+        for (int i = 0; i < p.Length; i++)
+        {
+            sw.WriteLine($"{p[i].X} {p[i].Y} {v[i]}");
+        }
+        
+        sw.Close();
+    }
 }

@@ -104,7 +104,16 @@ public partial class MainWindow : IViewFor<MainViewModel>
                                 points.Add(new Point((double)(x[0].X + j * hx)!, (double)(y[0].Y + i * hy)!));
                             }
                         }
-                    
+
+                        var linePoints = new List<Point>();
+                        for (int j = 0; j < nx; j++)
+                        {
+                            linePoints.Add(new Point((double)(x[0].X + j * hx)!, 6.0));
+                        }
+                        
+                        var line = spline.CalculateAtPoints(linePoints);
+                        FilesWorking.WriteData("graph", linePoints, line);
+                        
                         values = spline.CalculateAtPoints(points).ToArray();
                         var delaunay = new TriangleNet.Meshing.Algorithm.Dwyer();
                     
